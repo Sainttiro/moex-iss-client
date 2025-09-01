@@ -12,3 +12,10 @@ class Settings(BaseSettings):
     MOEX_PASSWORD: str
     MOEX_BASE_URL: str = "https://iss.moex.com"
     MOEX_AUTH_URL: str = "https://passport.moex.com/authenticate"
+
+    # ClickHouse settings
+    CLICKHOUSE_HOST: str = "localhost"
+    CLICKHOUSE_PORT: int = 9000
+    CLICKHOUSE_DB: str = "moex"
+    CLICKHOUSE_USER: str = "default"
+    CLICKHOUSE_PASSWORD: str = ""

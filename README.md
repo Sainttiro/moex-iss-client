@@ -16,13 +16,14 @@
 
 ### Требования
 - Python 3.8+
+- Docker и Docker Compose
 - Аккаунт в MOEX ISS для доступа к историческим данным
 
 ### Настройка проекта
 
 1. Клонируйте репозиторий:
 ```bash
-git clone <repository-url>
+git clone https://github.com/Sainttiro/moex-iss-client.git
 cd moex-iss-client
 ```
 
@@ -61,15 +62,13 @@ MOEX_AUTH_URL=https://passport.moex.com/authenticate
 ### Командная строка
 
 ```bash
-# Получить исторические данные
-moex-client history --engine stock --market shares --board tqbr --date 2023-01-15
-
-# Загрузить данные за период
+# Загрузить данные за период в JSON
 moex-client history --engine stock --market shares --board tqbr \
   --from-date 2020-01-01 --to-date 2023-12-31 --output data.json
 
-# Загрузить данные в ClickHouse
-moex-client load-clickhouse --input data.json
+# Загрузить данные напрямую в ClickHouse
+moex-client history --engine stock --market shares --board TQBR \
+  --from-date 2023-10-01 --to-date 2023-10-05 --to-clickhouse
 ```
 
 ### Python API
@@ -93,6 +92,29 @@ data = client.get_historical_securities(
     date="2023-01-15"
 )
 ```
+
+## Работа с ClickHouse
+
+### Запуск окружения
+
+Для работы с ClickHouse используется Docker. Запустите сервисы:
+```bash
+docker-compose up -d
+```
+Эта команда поднимет два контейнера:
+- `clickhouse-server`: Сервер ClickHouse, доступный по порту `9000`.
+- `grafana`: Веб-интерфейс для работы с данными, доступный по адресу `http://localhost:3000`.
+
+### Настройка Grafana
+1. Откройте Grafana в браузере: `http://localhost:3000`.
+2. Войдите, используя логин `admin` и пароль `admin`.
+3. Добавьте ClickHouse как источник данных:
+    - Перейдите в `Configuration > Data Sources > Add data source`.
+    - Выберите `ClickHouse`.
+    - В поле `URL` укажите `http://clickhouse-server:8123`. **Важно:** `clickhouse-server` - это имя сервиса из `docker-compose.yml`, оно будет работать только из Grafana, так как они находятся в одной Docker-сети.
+    - Нажмите `Save & Test`.
+
+Теперь вы можете выполнять SQL-запросы к вашей базе данных.
 
 ## Разработка
 
