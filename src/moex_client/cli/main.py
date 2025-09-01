@@ -52,6 +52,9 @@ def history(engine: str, market: str, board: str, from_date: str, to_date: str, 
                     engine=engine, market=market, board=board, date=date_str
                 )
                 if data:
+                    # Convert TRADEDATE string to datetime.date object
+                    for row in data:
+                        row['TRADEDATE'] = datetime.datetime.strptime(row['TRADEDATE'], '%Y-%m-%d').date()
                     ch_client.insert_data(data)
             console.print("[bold green]Data successfully loaded to ClickHouse.[/bold green]")
         else:

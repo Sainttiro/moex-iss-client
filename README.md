@@ -111,7 +111,7 @@ docker-compose up -d
 3. Добавьте ClickHouse как источник данных:
     - Перейдите в `Configuration > Data Sources > Add data source`.
     - Выберите `ClickHouse`.
-    - В поле `URL` укажите `http://clickhouse-server:8123`. **Важно:** `clickhouse-server` - это имя сервиса из `docker-compose.yml`, оно будет работать только из Grafana, так как они находятся в одной Docker-сети.
+    - В поле `URL` укажите `http://localhost:8123`. **Важно:** `localhost` - это имя сервиса из `docker-compose.yml`, оно будет работать только из Grafana, так как они находятся в одной Docker-сети.
     - Нажмите `Save & Test`.
 
 Теперь вы можете выполнять SQL-запросы к вашей базе данных.
