@@ -52,9 +52,22 @@ def history(engine: str, market: str, board: str, from_date: str, to_date: str, 
                     engine=engine, market=market, board=board, date=date_str
                 )
                 if data:
-                    # Convert TRADEDATE string to datetime.date object
+                    # Convert TRADEDATE string to datetime.date object and numeric fields to float
+                    numeric_fields = [
+                        'NUMTRADES', 'VALUE', 'OPEN', 'LOW', 'HIGH', 'LEGALCLOSEPRICE',
+                        'WAPRICE', 'CLOSE', 'VOLUME', 'MARKETPRICE2', 'MARKETPRICE3',
+                        'ADMITTEDQUOTE', 'MP2VALTRD', 'MARKETPRICE3TRADESVALUE', 'ADMITTEDVALUE', 'WAVAL'
+                    ]
                     for row in data:
                         row['TRADEDATE'] = datetime.datetime.strptime(row['TRADEDATE'], '%Y-%m-%d').date()
+                        for field in numeric_fields:
+                            if row.get(field) is None or row.get(field) == '':
+                                row[field] = 0.0
+                            else:
+                                try:
+                                    row[field] = float(row[field])
+                                except (ValueError, TypeError):
+                                    row[field] = 0.0 # Fallback for unexpected non-numeric values
                     ch_client.insert_data(data)
             console.print("[bold green]Data successfully loaded to ClickHouse.[/bold green]")
         else:
