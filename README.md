@@ -62,11 +62,17 @@ MOEX_AUTH_URL=https://passport.moex.com/authenticate
 ### Командная строка
 
 ```bash
-# Загрузить данные за период в JSON
-moex-client history --engine stock --market shares --board tqbr \
-  --from-date 2020-01-01 --to-date 2023-12-31 --output data.json
+# Загрузить данные за одну дату в JSON
+moex-client history --engine stock --market shares --board TQBR --date 2023-10-01 --output data.json
 
-# Загрузить данные напрямую в ClickHouse
+# Загрузить данные за период в JSON
+moex-client history --engine stock --market shares --board TQBR \
+  --from-date 2023-10-01 --to-date 2023-10-05 --output data.json
+
+# Загрузить данные за одну дату напрямую в ClickHouse
+moex-client history --engine stock --market shares --board TQBR --date 2023-10-01 --to-clickhouse
+
+# Загрузить данные за период напрямую в ClickHouse
 moex-client history --engine stock --market shares --board TQBR \
   --from-date 2023-10-01 --to-date 2023-10-05 --to-clickhouse
 ```
@@ -111,7 +117,14 @@ docker-compose up -d
 3. Добавьте ClickHouse как источник данных:
     - Перейдите в `Configuration > Data Sources > Add data source`.
     - Выберите `ClickHouse`.
-    - В поле `URL` укажите `http://localhost:8123`. **Важно:** `localhost` - это имя сервиса из `docker-compose.yml`, оно будет работать только из Grafana, так как они находятся в одной Docker-сети.
+    - В разделе `HTTP`:
+        - `URL`: `http://clickhouse-server:8123` (это имя сервиса из `docker-compose.yml`, оно работает из Grafana, так как они находятся в одной Docker-сети).
+        - `Access`: `Server (default)`
+    - В разделе `ClickHouse Details`:
+        - `Default database`: `moex`
+        - `Default table`: `securities_history`
+        - `User`: `default`
+        - `Password`: (оставьте пустым, если не меняли в `docker-compose.yml`)
     - Нажмите `Save & Test`.
 
 Теперь вы можете выполнять SQL-запросы к вашей базе данных.
