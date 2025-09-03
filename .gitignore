@@ -131,3 +131,6 @@ Thumbs.db
 
 # Docker
 clickhouse_data/
+
+# Logs
+DEVELOPMENT_LOG.md

@@ -135,17 +135,18 @@ while current_date <= end_date:
 print(f"Данные за период: {all_data_range}")
 ```
 
-## 5. Работа с ClickHouse
+## 5. Работа с ClickHouse и Superset
 
 ### Запуск окружения
 
-Для работы с ClickHouse используется Docker. Убедитесь, что у вас установлен и запущен Docker, затем выполните в корневой директории проекта:
+Для работы с ClickHouse и Superset используется Docker. Убедитесь, что у вас установлен и запущен Docker, затем выполните в корневой директории проекта:
 ```bash
 docker-compose up -d
 ```
-Эта команда поднимет два контейнера:
+Эта команда поднимет три контейнера:
 - `clickhouse-server`: Сервер ClickHouse, доступный по порту `9000` (для нативного протокола) и `8123` (для HTTP).
 - `grafana`: Веб-интерфейс для работы с данными, доступный по адресу `http://localhost:3000`.
+- `superset`: Веб-интерфейс Superset, доступный по адресу `http://localhost:8088`.
 
 ### Настройка Grafana
 1.  Откройте Grafana в браузере: `http://localhost:3000`.
@@ -167,6 +168,10 @@ docker-compose up -d
 ```sql
 SELECT * FROM moex.securities_history LIMIT 10;
 ```
+
+### Настройка Superset
+
+Подробное руководство по настройке и подключению Superset к ClickHouse доступно в файле [SUPERSET.md](SUPERSET.md).
 
 ## 6. Разработка
 
