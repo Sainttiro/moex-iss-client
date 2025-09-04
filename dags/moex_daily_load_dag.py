@@ -10,9 +10,10 @@ with DAG(
     schedule="0 6 * * *",
     start_date=pendulum.datetime(2025, 9, 4, tz="Europe/Moscow"),
     catchup=False,
+    is_paused_upon_creation=False,
     tags=["moex"],
 ) as dag:
     load_daily_data = BashOperator(
         task_id="load_daily_data",
-        bash_command="python /opt/airflow/scripts/daily_load.py",
+        bash_command="python /opt/airflow/scripts/daily_load.py"
     )
