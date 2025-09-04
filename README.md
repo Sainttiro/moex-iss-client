@@ -141,6 +141,27 @@ src/moex_client/
 └── cli/           # Командная строка
 ```
 
+## Автоматизация с Airflow
+
+В проект интегрирован Apache Airflow для автоматизации ежедневной загрузки данных.
+
+### Запуск Airflow
+
+1.  **Запустите все сервисы:**
+    ```bash
+    docker-compose up -d
+    ```
+    Эта команда запустит все сервисы, включая ClickHouse, Grafana, Superset и Airflow.
+
+2.  **Доступ к Airflow UI:**
+    Веб-интерфейс Airflow будет доступен по адресу `http://localhost:8080`.
+    *   **Логин:** `admin`
+    *   **Пароль:** `admin`
+
+### DAG `moex_daily_load`
+
+DAG `moex_daily_load` настроен для ежедневного запуска в 6 утра по московскому времени. Он выполняет скрипт `scripts/daily_load.py`, который загружает данные за предыдущий торговый день в ClickHouse.
+
 ## Лицензия
 
 MIT License

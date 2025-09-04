@@ -173,6 +173,19 @@ SELECT * FROM moex.securities_history LIMIT 10;
 
 Подробное руководство по настройке и подключению Superset к ClickHouse доступно в файле [SUPERSET.md](SUPERSET.md).
 
+### Запуск Airflow
+
+Для автоматизации загрузки данных используется Apache Airflow.
+
+1.  **Запустите все сервисы:**
+    ```bash
+    docker-compose up -d
+    ```
+2.  **Доступ к Airflow UI:**
+    Веб-интерфейс Airflow будет доступен по адресу `http://localhost:8080`.
+    *   **Логин:** `admin`
+    *   **Пароль:** `admin`
+
 ## 6. Разработка
 
 ### Установка для разработки
