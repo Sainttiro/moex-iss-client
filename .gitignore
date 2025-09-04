@@ -131,6 +131,8 @@ Thumbs.db
 
 # Docker
 clickhouse_data/
+grafana_data/
+superset_data/
 
 # Logs
 DEVELOPMENT_LOG.md

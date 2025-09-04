@@ -17,10 +17,10 @@ docker-compose up -d
 
 При первом запуске Superset необходимо выполнить несколько команд для его инициализации.
 
-1.  **Создание администратора:**
-    Выполните следующую команду, чтобы создать пользователя-администратора. Замените `admin` на желаемое имя пользователя.
+1.  **Установка драйвера ClickHouse:**
+    Для подключения к ClickHouse необходимо установить соответствующий драйвер.
     ```bash
-    docker-compose exec superset superset-init --username admin --firstname Superset --lastname Admin --email admin@superset.com --password admin
+    docker-compose exec superset pip install clickhouse-connect
     ```
 
 2.  **Инициализация базы данных:**
@@ -28,10 +28,15 @@ docker-compose up -d
     docker-compose exec superset superset db upgrade
     ```
 
-3.  **Установка драйвера ClickHouse:**
-    Для подключения к ClickHouse необходимо установить соответствующий драйвер.
+3.  **Создание администратора:**
+    Выполните следующую команду, чтобы создать пользователя-администратора. Замените `admin` на желаемое имя пользователя.
     ```bash
-    docker-compose exec superset pip install clickhouse-connect
+    docker-compose exec superset superset fab create-admin --username admin --firstname Superset --lastname Admin --email admin@superset.com --password admin
+    ```
+
+4.  **Инициализация Superset:**
+    ```bash
+    docker-compose exec superset superset init
     ```
 
 ## 3. Подключение ClickHouse в Superset
