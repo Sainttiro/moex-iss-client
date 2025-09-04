@@ -149,20 +149,12 @@ docker-compose up -d
 - `superset`: Веб-интерфейс Superset, доступный по адресу `http://localhost:8088`.
 
 ### Настройка Grafana
+
+Источник данных ClickHouse настраивается автоматически при первом запуске Grafana.
+
 1.  Откройте Grafana в браузере: `http://localhost:3000`.
 2.  Войдите, используя логин `admin` и пароль `admin`.
-3.  Добавьте ClickHouse как источник данных:
-    - Перейдите в `Configuration > Data Sources > Add data source`.
-    - Выберите `ClickHouse`.
-    - В разделе `HTTP`:
-        - `URL`: `http://clickhouse-server:8123` (это имя сервиса из `docker-compose.yml`, оно работает из Grafana, так как они находятся в одной Docker-сети).
-        - `Access`: `Server (default)`
-    - В разделе `ClickHouse Details`:
-        - `Default database`: `moex`
-        - `Default table`: `securities_history`
-        - `User`: `default`
-        - `Password`: (оставьте пустым, если не меняли в `docker-compose.yml`)
-    - Нажмите `Save & Test`.
+3.  Перейдите в `Configuration > Data Sources`, и вы увидите, что источник данных `ClickHouse` уже добавлен.
 
 Теперь вы можете выполнять SQL-запросы к вашей базе данных ClickHouse через интерфейс Grafana, например:
 ```sql

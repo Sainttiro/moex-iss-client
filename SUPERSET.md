@@ -17,13 +17,7 @@ docker-compose up -d
 
 При первом запуске Superset необходимо выполнить несколько команд для его инициализации.
 
-1.  **Установка драйвера ClickHouse:**
-    Для подключения к ClickHouse необходимо установить соответствующий драйвер.
-    ```bash
-    docker-compose exec superset pip install clickhouse-connect
-    ```
-
-2.  **Инициализация базы данных:**
+1.  **Инициализация базы данных:**
     ```bash
     docker-compose exec superset superset db upgrade
     ```

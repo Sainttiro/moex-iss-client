@@ -25,6 +25,7 @@ services:
       - "3000:3000"
     volumes:
       - ./grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -32,7 +33,8 @@ services:
       - clickhouse-server
 
   superset:
-    image: apache/superset:latest
+    build:
+      context: ./superset
     container_name: superset
     ports:
       - "8088:8088"
