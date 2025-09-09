@@ -1,6 +1,8 @@
 import subprocess
 import datetime
 import os
+import sys
+
 
 def get_previous_trading_day():
     """
@@ -10,6 +12,7 @@ def get_previous_trading_day():
     today = datetime.date.today()
     previous_day = today - datetime.timedelta(days=1)
     return previous_day.strftime("%Y-%m-%d")
+
 
 def run_daily_load():
     """
@@ -29,19 +32,22 @@ def run_daily_load():
     print(f"Executing command: {' '.join(command)}")
     
     try:
-        # Убедимся, что команда выполняется в правильном окружении
         env = os.environ.copy()
-        # Если используется venv, нужно его активировать или указать путь к исполняемому файлу
-        # В данном случае, предполагается, что moex-client доступен в PATH
-        subprocess.run(command, check=True, capture_output=True, text=True, env=env)
-        print(f"Successfully loaded data for {date_to_load}")
+        result = subprocess.run(
+            command, check=True, capture_output=True, text=True, env=env
+        )
+        print(result.stdout)
+        print(f"✅ Successfully loaded data for {date_to_load}")
     except subprocess.CalledProcessError as e:
-        print(f"Error loading data for {date_to_load}")
+        print(f"❌ Error loading data for {date_to_load}")
         print(f"Return code: {e.returncode}")
         print(f"Output: {e.stdout}")
         print(f"Error output: {e.stderr}")
+        sys.exit(1)  # <--- ВАЖНО! Возвращаем ненулевой код
     except FileNotFoundError:
-        print("Error: 'moex-client' command not found. Make sure the package is installed and in your PATH.")
+        print("❌ Error: 'moex-client' command not found. Make sure the package is installed and in your PATH.")
+        sys.exit(1)  # <--- Тоже падаем
+
 
 if __name__ == "__main__":
     run_daily_load()
