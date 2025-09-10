@@ -19,3 +19,6 @@ class Settings(BaseSettings):
     CLICKHOUSE_DB: str = "moex"
     CLICKHOUSE_USER: str = "default"
     CLICKHOUSE_PASSWORD: str = ""
+
+    # ClickHouse day session settings
+    CLICKHOUSE_DAY_SESSION_DB: str = "moex_day_session"
