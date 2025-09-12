@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.progress import track
 
 from ..client import MoexClient
+from ..client.session_api import MoexSessionClient
 from ..config import Settings
 from ..clickhouse import ClickHouseClient
 
@@ -15,6 +16,46 @@ def cli():
     CLI for the MOEX ISS Client.
     """
     pass
+
+
+@cli.command()
+@click.option("--output", help="Output file path (JSON)")
+@click.option("--to-clickhouse", is_flag=True, help="Load data directly to ClickHouse")
+def session_summary(output: str, to_clickhouse: bool):
+    """
+    Retrieves TQBR trading session summary.
+    """
+    console = Console()
+    try:
+        client = MoexSessionClient()
+        data = client.get_tqbr_summary()
+
+        if not data:
+            console.print("[bold yellow]No data received from the API.[/bold yellow]")
+            return
+
+        if to_clickhouse:
+            settings = Settings()
+            ch_client = ClickHouseClient(settings)
+            console.print("[bold cyan]Creating ClickHouse table 'session_summary' if not exists...[/bold cyan]")
+            ch_client.create_session_summary_table()
+
+            # Add load_date to each record
+            load_date = datetime.date.today()
+            for row in data:
+                row['load_date'] = load_date
+
+            ch_client.insert_session_summary_data(data)
+            console.print("[bold green]Data successfully loaded to ClickHouse table 'session_summary'.[/bold green]")
+        elif output:
+            with open(output, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+            console.print(f"[bold green]Data saved to {output}[/bold green]")
+        else:
+            console.print(data)
+
+    except Exception as e:
+        console.print(f"[bold red]Error: {e}[/bold red]")
 
 
 @cli.command()

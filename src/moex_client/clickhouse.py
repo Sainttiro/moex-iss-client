@@ -55,3 +55,46 @@ class ClickHouseClient:
         if not data:
             return
         self.client.execute("INSERT INTO securities_history VALUES", data)
+
+    def create_session_summary_table(self):
+        """
+        Creates the session_summary table if it doesn't exist.
+        """
+        query = """
+        CREATE TABLE IF NOT EXISTS session_summary (
+            SECID String,
+            BOARDID String,
+            TRADINGSESSION String,
+            TIME String,
+            PRICEMINUSPREVWAPRICE Float64,
+            VOLTODAY Float64,
+            VALTODAY Float64,
+            HIGHBID Float64,
+            LOWOFFER Float64,
+            LASTOFFER Float64,
+            LASTBID Float64,
+            OPEN Float64,
+            LOW Float64,
+            HIGH Float64,
+            LAST Float64,
+            LCLOSEPRICE Float64,
+            NUMTRADES Float64,
+            WAPRICE Float64,
+            MARKETPRICE2 Float64,
+            LCURRENTPRICE Float64,
+            CLOSINGAUCTIONPRICE Float64,
+            LASTTOPREVPRICE Float64,
+            load_date Date
+        ) ENGINE = MergeTree()
+        PARTITION BY toYYYYMM(load_date)
+        ORDER BY (load_date, SECID);
+        """
+        self.client.execute(query)
+
+    def insert_session_summary_data(self, data: list):
+        """
+        Inserts data into the session_summary table.
+        """
+        if not data:
+            return
+        self.client.execute("INSERT INTO session_summary VALUES", data)

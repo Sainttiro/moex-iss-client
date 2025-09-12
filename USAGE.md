@@ -54,7 +54,11 @@
 
 ## 3. Использование командной строки (CLI)
 
-Клиент предоставляет команду `moex-client history` для загрузки исторических данных.
+Клиент предоставляет следующие команды:
+
+### 3.1. Команда `moex-client history`
+
+Эта команда используется для загрузки исторических данных по ценным бумагам.
 
 ### Основные опции:
 
@@ -95,6 +99,27 @@
       --from-date 2023-10-01 --to-date 2023-10-05 --to-clickhouse
     ```
 
+### 3.2. Команда `moex-client session-summary`
+
+Эта команда используется для получения промежуточных итогов по акциям MOEX TQBR (основная сессия).
+
+#### Основные опции:
+
+*   `--output <FILE_PATH>`: **Опционально.** Путь к файлу, в который будут сохранены полученные данные в формате JSON. Если эта опция не указана, данные будут выведены в консоль.
+*   `--to-clickhouse`: **Опционально.** Флаг. Если указан, данные будут загружены напрямую в ClickHouse, минуя сохранение в JSON-файл.
+
+#### Примеры использования:
+
+1.  **Получение данных о текущей сессии в JSON:**
+    ```bash
+    moex-client session-summary --output session_data.json
+    ```
+
+2.  **Загрузка данных о текущей сессии напрямую в ClickHouse:**
+    ```bash
+    moex-client session-summary --to-clickhouse
+    ```
+
 ## 4. Использование Python API
 
 Вы также можете использовать клиент программно:
@@ -111,7 +136,7 @@ client = MoexClient(settings)
 # Аутентификация
 client.authenticate()
 
-# Получение данных за одну дату
+# Получение исторических данных за одну дату
 data_single_date = client.get_historical_securities(
     engine="stock",
     market="shares", 
@@ -119,6 +144,13 @@ data_single_date = client.get_historical_securities(
     date="2023-01-15"
 )
 print(f"Данные за 2023-01-15: {data_single_date}")
+
+# Получение данных о текущей торговой сессии TQBR
+from moex_client.client.session_api import MoexSessionClient
+
+session_client = MoexSessionClient()
+session_data = session_client.get_tqbr_summary()
+print(f"Данные о текущей сессии: {session_data}")
 
 # Пример загрузки данных за период (потребуется цикл)
 start_date = datetime.date(2023, 10, 1)
