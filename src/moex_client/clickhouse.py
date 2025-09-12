@@ -97,4 +97,18 @@ class ClickHouseClient:
         """
         if not data:
             return
+        
+        # Преобразуем None в соответствующие типы
+        for row in data:
+            for key, value in row.items():
+                if value is None:
+                    if key in ['PRICEMINUSPREVWAPRICE', 'VOLTODAY', 'VALTODAY', 'HIGHBID', 'LOWOFFER', 
+                              'LASTOFFER', 'LASTBID', 'OPEN', 'LOW', 'HIGH', 'LAST', 'LCLOSEPRICE', 
+                              'NUMTRADES', 'WAPRICE', 'MARKETPRICE2', 'LCURRENTPRICE', 
+                              'CLOSINGAUCTIONPRICE', 'LASTTOPREVPRICE']:
+                        row[key] = 0.0
+                    else:
+                        # Для строковых полей заменяем None на пустую строку
+                        row[key] = ''
+        
         self.client.execute("INSERT INTO session_summary VALUES", data)

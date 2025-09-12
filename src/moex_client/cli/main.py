@@ -27,7 +27,8 @@ def session_summary(output: str, to_clickhouse: bool):
     """
     console = Console()
     try:
-        client = MoexSessionClient()
+        settings = Settings()
+        client = MoexSessionClient(settings)
         data = client.get_tqbr_summary()
 
         if not data:

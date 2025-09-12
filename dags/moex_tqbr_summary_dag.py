@@ -1,36 +1,47 @@
-from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
+from __future__ import annotations
+import os
+import subprocess
+import pendulum
+from airflow.models.dag import DAG
+from airflow.operators.python import PythonOperator
 
-# Настройки по умолчанию для DAG
-default_args = {
-    'owner': 'data_team',
-    'depends_on_past': False,
-    'start_date': datetime(2024, 1, 1),
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 2,
-    'retry_delay': timedelta(minutes=5),
-    'catchup': False
-}
+def load_session_summary():
+    """
+    Загружает данные о текущей торговой сессии TQBR в ClickHouse.
+    """
+    # Определяем host/port ClickHouse
+    clickhouse_host = os.environ.get("CLICKHOUSE_HOST", "localhost")
+    clickhouse_port = os.environ.get("CLICKHOUSE_PORT", "9000")
 
-# Создание DAG
-dag = DAG(
-    'moex_tqbr_summary_dag',
-    default_args=default_args,
-    description='Получение промежуточных итогов по акциям MOEX TQBR и загрузка в ClickHouse',
-    schedule_interval='0 19 * * 1-5',  # Каждый рабочий день в 19:00 (после закрытия торгов)
-    max_active_runs=1,
-    tags=['moex', 'tqbr', 'stocks', 'summary']
-)
+    # Вытаскиваем MOEX логин/пароль из env
+    moex_user = os.environ.get("MOEX_USERNAME")
+    moex_pass = os.environ.get("MOEX_PASSWORD")
 
-# Команда для выполнения
-# Примечание: предполагается, что moex-client установлен в окружении, где работает Airflow
-command = "moex-client session-summary --to-clickhouse"
+    if not moex_user or not moex_pass:
+        raise RuntimeError("MOEX_USERNAME или MOEX_PASSWORD не установлены")
 
-# Определение задачи
-load_summary_to_clickhouse = BashOperator(
-    task_id='load_tqbr_summary_to_clickhouse',
-    bash_command=command,
-    dag=dag,
-)
+    # Формируем команду для запуска CLI
+    cmd = ["python", "-m", "moex_client.cli.main", "session-summary", "--to-clickhouse"]
+
+    print("Запускаем команду:", " ".join(cmd))
+    proc = subprocess.run(cmd, capture_output=True, text=True, env=os.environ)
+
+    print(proc.stdout)
+    print(proc.stderr)
+
+    if proc.returncode != 0:
+        raise RuntimeError("session-summary завершился с ошибкой")
+
+with DAG(
+    dag_id="moex_tqbr_summary_cli_dag",
+    schedule="0 19 * * 1-5",  # Каждый рабочий день в 19:00 (после закрытия торгов)
+    start_date=pendulum.datetime(2025, 9, 4, tz="Europe/Moscow"),
+    catchup=False,
+    is_paused_upon_creation=False,
+    tags=["moex", "tqbr", "stocks", "summary"],
+) as dag:
+
+    load_task = PythonOperator(
+        task_id="load_session_summary",
+        python_callable=load_session_summary
+    )
