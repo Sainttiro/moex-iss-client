@@ -18,7 +18,8 @@
 │   └── Dockerfile                # Dockerfile для сборки образа Airflow
 ├── dags/
 │   ├── moex_daily_load_dag.py    # DAG для Airflow для ежедневной загрузки данных
-│   └── moex_tqbr_summary_dag.py  # DAG для Airflow для загрузки итогов сессии
+│   ├── moex_day_session.py       # DAG для получения данных о сессии через Python API
+│   └── moex_tqbr_summary_dag.py  # DAG для получения данных о сессии через CLI
 ├── scripts/
 │   ├── daily_load.py             # Скрипт для загрузки данных за предыдущий день
 │   ├── load_history_to_clickhouse.py # Скрипт для загрузки исторических данных
@@ -51,7 +52,7 @@
 *   **`config/settings.py`**: Определяет класс `Settings` с использованием `Pydantic` для управления конфигурацией приложения. Загружает переменные из `.env` файла, такие как учетные данные MOEX и параметры подключения к ClickHouse.
 *   **`auth/api.py`**: Содержит класс `MoexAuth`, который отвечает за аутентификацию на сервере MOEX. Он отправляет запрос на `MOEX_AUTH_URL` с логином и паролем и сохраняет полученный cookie `MicexPassportCert`.
 *   **`client/api.py`**: Содержит основной класс `MoexClient`. Он использует `MoexAuth` для аутентификации и выполняет запросы к MOEX ISS API для получения исторических данных по ценным бумагам. Реализует пагинацию для получения всех данных.
-*   **`client/session_api.py`**: Содержит класс `MoexSessionClient` для получения данных о текущей торговой сессии MOEX TQBR. Не требует аутентификации и возвращает промежуточные итоги по акциям.
+*   **`client/session_api.py`**: Содержит класс `MoexSessionClient` для получения данных о текущей торговой сессии MOEX TQBR. Поддерживает аутентификацию через `MoexAuth` и возвращает промежуточные итоги по акциям.
 *   **`clickhouse.py`**: Содержит класс `ClickHouseClient` для взаимодействия с базой данных ClickHouse. Включает методы для создания таблиц `securities_history` и `session_summary`, а также методы для вставки данных в эти таблицы.
 *   **`cli/main.py`**: Реализует командный интерфейс (CLI) с использованием библиотеки `click`. Включает команды:
     * `moex-client history` - загрузка исторических данных, указывая параметры (engine, market, board, даты) и выбирая, куда сохранять данные (JSON-файл или напрямую в ClickHouse).
@@ -66,7 +67,8 @@
 ### `dags/` - Скрипты для Apache Airflow
 
 *   **`moex_daily_load_dag.py`**: Определяет DAG (Directed Acyclic Graph) для Airflow. Этот DAG настроен на ежедневный запуск в 6 утра. Он вызывает скрипт `scripts/daily_load.py` внутри Docker-контейнера Airflow для автоматизации процесса загрузки данных.
-*   **`moex_tqbr_summary_dag.py`**: Определяет DAG для Airflow, который запускается каждый рабочий день в 19:00 (после закрытия торгов). Он вызывает команду `moex-client session-summary --to-clickhouse` для получения промежуточных итогов по акциям TQBR и сохранения их в ClickHouse.
+*   **`moex_day_session.py`**: Определяет DAG `moex_tqbr_summary_dag` для Airflow, который запускается каждый рабочий день в 19:00 (после закрытия торгов). Он использует Python API напрямую для получения данных о сессии и сохранения их в JSON-файл.
+*   **`moex_tqbr_summary_dag.py`**: Определяет DAG `moex_tqbr_summary_cli_dag` для Airflow, который запускается каждый рабочий день в 19:00 (после закрытия торгов). Он вызывает команду `moex-client session-summary --to-clickhouse` для получения промежуточных итогов по акциям TQBR и сохранения их в ClickHouse.
 
 ### Корневые файлы
 
@@ -80,8 +82,9 @@
 3.  **`cli/main.py` -> `client/session_api.py`**: CLI создает экземпляр `MoexSessionClient` для получения данных о текущей торговой сессии.
 4.  **`cli/main.py` -> `clickhouse.py`**: Если указан флаг `--to-clickhouse`, CLI использует `ClickHouseClient` для сохранения данных в базу.
 5.  **`client/api.py` -> `auth/api.py`**: `MoexClient` использует `MoexAuth` для аутентификации перед отправкой запросов на получение данных.
-6.  **`client/api.py` -> `config/settings.py`**: Все ключевые модули (`MoexClient`, `MoexAuth`, `ClickHouseClient`) импортируют `Settings` для доступа к конфигурации.
-7.  **Airflow (`dags/moex_daily_load_dag.py`) -> `scripts/daily_load.py`**: DAG в Airflow по расписанию запускает скрипт `daily_load.py`.
-8.  **Airflow (`dags/moex_tqbr_summary_dag.py`) -> CLI**: DAG в Airflow по расписанию вызывает команду `moex-client session-summary`.
-9.  **`scripts/daily_load.py` -> `cli/main.py`**: Скрипт `daily_load.py` формирует и выполняет команду `moex-client history`, по сути, программно используя CLI.
-10. **Docker (`docker-compose.yml`)**: Запускает и связывает все внешние сервисы (ClickHouse, Airflow, Grafana, Superset), создавая единое окружение для работы всего приложения.
+6.  **`client/session_api.py` -> `auth/api.py`**: `MoexSessionClient` также использует `MoexAuth` для аутентификации, если предоставлены настройки.
+7.  **`client/api.py` -> `config/settings.py`**: Все ключевые модули (`MoexClient`, `MoexAuth`, `ClickHouseClient`) импортируют `Settings` для доступа к конфигурации.
+8.  **Airflow (`dags/moex_daily_load_dag.py`) -> `scripts/daily_load.py`**: DAG в Airflow по расписанию запускает скрипт `daily_load.py`.
+9.  **Airflow (`dags/moex_tqbr_summary_dag.py`) -> CLI**: DAG `moex_tqbr_summary_cli_dag` в Airflow по расписанию вызывает команду `moex-client session-summary`.
+10. **`scripts/daily_load.py` -> `cli/main.py`**: Скрипт `daily_load.py` формирует и выполняет команду `moex-client history`, по сути, программно используя CLI.
+11. **Docker (`docker-compose.yml`)**: Запускает и связывает все внешние сервисы (ClickHouse, Airflow, Grafana, Superset), создавая единое окружение для работы всего приложения.
