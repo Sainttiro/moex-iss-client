@@ -2,6 +2,7 @@ services:
   clickhouse-server:
     image: clickhouse/clickhouse-server:latest
     container_name: clickhouse-server
+    init: true # Добавляем опцию init для решения проблемы с процессами-зомби
     ports:
       - "8123:8123"
       - "9000:9000"
